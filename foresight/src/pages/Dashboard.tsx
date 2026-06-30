@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { DashboardCard } from "../components/ui/Dashboardcards";
-import { 
-  LucideCircleDollarSign, 
-  Landmark, 
-  ShieldAlert, 
-  Calendar, 
+import {
+  LucideCircleDollarSign,
+  Landmark,
+  ShieldAlert,
+  Calendar,
   Loader2,
   AlertTriangle,
   Users,
   LineChart as LineIcon
 } from "lucide-react";
-import { 
-  ComposedChart, 
-  Line, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import {
+  ComposedChart,
+  Line,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   BarChart
 } from "recharts";
@@ -134,8 +134,8 @@ function Dashboard() {
   };
 
   return (
-    <div className="w-full p-6 space-y-8 bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-300 text-left">
-      
+    <div className="w-full p-6 space-y-8 bg-slate-50 text-slate-800  dark:bg-slate-950 min-h-screen dark:text-slate-50 transition-colors duration-300 text-left">
+
       {/* 1. Header Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -154,35 +154,35 @@ function Dashboard() {
 
       {/* 2. Metric Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-        <DashboardCard 
-          title="Total Outstanding Portfolio" 
-          data={`₹${(summary.total_outstanding / 10000000).toFixed(2)} Cr`} 
-          icon={<LucideCircleDollarSign className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />} 
+        <DashboardCard
+          title="Total Outstanding Portfolio"
+          data={`₹${(summary.total_outstanding / 10000000).toFixed(2)} Cr`}
+          icon={<LucideCircleDollarSign className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />}
           trend={{ value: `${summary.npa_rate.toFixed(1)}% NPA Rate`, isPositive: summary.npa_rate < 15 }}
         />
-        <DashboardCard 
-          title="Active Accounts" 
-          data={summary.total_loans.toLocaleString()} 
-          icon={<Landmark className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />} 
+        <DashboardCard
+          title="Active Accounts"
+          data={summary.total_loans.toLocaleString()}
+          icon={<Landmark className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />}
           trend={{ value: `${summary.total_customers.toLocaleString()} Customers`, isPositive: true }}
         />
-        <DashboardCard 
-          title="Critical Risk Accounts" 
-          data={summary.critical_risk_count.toString()} 
-          icon={<ShieldAlert className="w-5 h-5 text-rose-500" />} 
-          trend={{ value: `${summary.high_risk_count} High Risk`, isPositive: false }} 
+        <DashboardCard
+          title="Critical Risk Accounts"
+          data={summary.critical_risk_count.toString()}
+          icon={<ShieldAlert className="w-5 h-5 text-rose-500" />}
+          trend={{ value: `${summary.high_risk_count} High Risk`, isPositive: false }}
         />
-        <DashboardCard 
-          title="Average Credit Score" 
-          data={summary.avg_credit_score.toFixed(0)} 
-          icon={<Users className="w-5 h-5 text-amber-500" />} 
-          trend={{ value: `PD Score: ${(summary.avg_pd_score * 100).toFixed(1)}%`, isPositive: summary.avg_pd_score < 0.25 }} 
+        <DashboardCard
+          title="Average Credit Score"
+          data={summary.avg_credit_score.toFixed(0)}
+          icon={<Users className="w-5 h-5 text-amber-500" />}
+          trend={{ value: `PD Score: ${(summary.avg_pd_score * 100).toFixed(1)}%`, isPositive: summary.avg_pd_score < 0.25 }}
         />
       </div>
 
       {/* 3. Charts & Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Trend Forecast Composed Chart */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900/60 backdrop-blur-xs p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-6 flex flex-col justify-between">
           <div className="space-y-1">
@@ -194,17 +194,17 @@ function Dashboard() {
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">Forward-looking history of aggregate monthly prediction volumes and average default probabilities.</p>
           </div>
-          
+
           <div className="h-[300px] w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={trends} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="4 4" vertical={false} className="text-slate-200 dark:text-slate-800" />
                 <XAxis dataKey="date" stroke="currentColor" className="text-slate-400" fontSize={11} fontWeight={500} tickLine={false} dy={10} />
-                <YAxis yAxisId="left" stroke="#6366f1" fontSize={11} fontWeight={500} tickLine={false} label={{ value: 'TOTAL PREDICTIONS', angle: -90, position: 'insideLeft', style: {textAnchor: 'middle', fill: '#6366f1', fontSize: 9, fontWeight: 700} }} />
-                <YAxis yAxisId="right" orientation="right" stroke="#f59e0b" fontSize={11} fontWeight={500} tickLine={false} label={{ value: 'PROBABILITY OF DEFAULT (PD)', angle: 90, position: 'insideRight', style: {textAnchor: 'middle', fill: '#f59e0b', fontSize: 9, fontWeight: 700} }} />
+                <YAxis yAxisId="left" stroke="#6366f1" fontSize={11} fontWeight={500} tickLine={false} label={{ value: 'TOTAL PREDICTIONS', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6366f1', fontSize: 9, fontWeight: 700 } }} />
+                <YAxis yAxisId="right" orientation="right" stroke="#f59e0b" fontSize={11} fontWeight={500} tickLine={false} label={{ value: 'PROBABILITY OF DEFAULT (PD)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: '#f59e0b', fontSize: 9, fontWeight: 700 } }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend verticalAlign="top" height={36} iconType="circle" iconSize={6} wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} />
-                
+
                 <Bar yAxisId="left" dataKey="total_predictions" name="Evaluations Processed" fill="#e0e7ff" stroke="#818cf8" strokeWidth={1} radius={[4, 4, 0, 0]} maxBarSize={45} className="fill-indigo-100/50 dark:fill-indigo-950/20" />
                 <Line yAxisId="right" type="monotone" dataKey="avg_pd_score" name="Avg Default Probability" stroke="#f59e0b" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
               </ComposedChart>
@@ -241,7 +241,7 @@ function Dashboard() {
 
       {/* 4. Lower Analytics: Loan Yield & Defaulters Registry */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Top Defaulters Sheet */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden flex flex-col justify-between">
           <div>
@@ -309,13 +309,12 @@ function Dashboard() {
                     <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                       <td className="py-3.5 px-5 font-semibold text-slate-900 dark:text-slate-100">{row.loan_type}</td>
                       <td className="py-3.5 px-5 text-center">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold ${
-                          row.status === "ACTIVE" 
-                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400" 
-                            : row.status === "CLOSED"
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold ${row.status === "ACTIVE"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400"
+                          : row.status === "CLOSED"
                             ? "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400"
                             : "bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400 animate-pulse"
-                        }`}>
+                          }`}>
                           {row.status}
                         </span>
                       </td>
@@ -341,8 +340,8 @@ function Dashboard() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {overview.top_alerts.slice(0, 6).map((alert) => (
-              <div 
-                key={alert.customer_id} 
+              <div
+                key={alert.customer_id}
                 className="p-4 border border-rose-100 dark:border-rose-950 bg-rose-500/5 hover:bg-rose-500/10 transition-colors rounded-xl flex flex-col justify-between text-xs gap-2.5"
               >
                 <div className="flex justify-between items-start">
