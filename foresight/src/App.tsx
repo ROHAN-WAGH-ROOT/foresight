@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Layout from "./components/layout";
@@ -15,7 +14,6 @@ function App() {
           <Route path="/Profile" element={<Profile />} />
         </Routes>
       </Layout>
-      {/* <Button>Send</Button> */}
     </>
   );
 }
