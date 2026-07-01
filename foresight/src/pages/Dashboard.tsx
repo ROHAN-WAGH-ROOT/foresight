@@ -1,39 +1,37 @@
-import { useEffect, useState } from "react";
-import { DashboardCard } from "../components/ui/Dashboardcards";
-import {
-  LucideCircleDollarSign,
-  Landmark,
-  ShieldAlert,
-  Calendar,
-  Loader2,
-  AlertTriangle,
-  Users,
-  LineChart as LineIcon
-} from "lucide-react";
-import {
-  ComposedChart,
-  Line,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart
-} from "recharts";
-import {
-  getDashboardOverviewApi,
-  getRiskTrendApi,
-  getRiskDistributionApi,
-  getLoanPerformanceApi,
-  getTopDefaultersApi,
-  type DashboardOverview,
-  type RiskTrendItem,
-  type RiskDistributionItem,
-  type LoanPerformanceItem,
-  type TopDefaulter
-} from "../components/api";
+import { DashboardCard } from "@/components/ui/Dashboardcards";
+import { ArrowUpRight, Calendar, Landmark, LucideCircleDollarSign, ShieldAlert } from "lucide-react";
+import { useState } from "react";
+import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+const PREDICTIVE_DATA = {
+  "3m": [
+    { month: "Month 1", Medium: 240, High: 56, Defaults: 800, NetChange: "+4.2%" },
+    { month: "Month 2", Medium: 250, High: 62, Defaults: 950, NetChange: "+6.1%" },
+    { month: "Month 3", Medium: 270, High: 70, Defaults: 1100, NetChange: "+8.3%" },
+  ],
+  "6m": [
+    { month: "Month 1", Medium: 240, High: 56, Defaults: 800, NetChange: "+4.2%" },
+    { month: "Month 2", Medium: 250, High: 62, Defaults: 950, NetChange: "+6.1%" },
+    { month: "Month 3", Medium: 270, High: 70, Defaults: 1100, NetChange: "+8.3%" },
+    { month: "Month 4", Medium: 290, High: 85, Defaults: 1300, NetChange: "+5.0%" },
+    { month: "Month 5", Medium: 310, High: 92, Defaults: 1450, NetChange: "+3.8%" },
+    { month: "Month 6", Medium: 330, High: 105, Defaults: 1600, NetChange: "+7.2%" },
+  ],
+  "12m": [
+    { month: "M1", Medium: 240, High: 56, Defaults: 800, NetChange: "+4.2%" },
+    { month: "M2", Medium: 250, High: 62, Defaults: 950, NetChange: "+6.1%" },
+    { month: "M3", Medium: 270, High: 70, Defaults: 1100, NetChange: "+8.3%" },
+    { month: "M4", Medium: 290, High: 85, Defaults: 1300, NetChange: "+5.0%" },
+    { month: "M5", Medium: 310, High: 92, Defaults: 1450, NetChange: "+3.8%" },
+    { month: "M6", Medium: 260, High: 105, Defaults: 1600, NetChange: "+7.2%" },
+    { month: "M7", Medium: 340, High: 110, Defaults: 1750, NetChange: "+2.1%" },
+    { month: "M8", Medium: 350, High: 115, Defaults: 1900, NetChange: "+1.9%" },
+    { month: "M9", Medium: 360, High: 120, Defaults: 2000, NetChange: "+0.8%" },
+    { month: "M10", Medium: 365, High: 130, Defaults: 2150, NetChange: "+4.1%" },
+    { month: "M11", Medium: 370, High: 142, Defaults: 2300, NetChange: "+5.5%" },
+    { month: "M12", Medium: 380, High: 156, Defaults: 2500, NetChange: "+6.8%" },
+  ]
+};
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -134,31 +132,14 @@ function Dashboard() {
   };
 
   return (
-    <div className="w-full p-6 space-y-8 bg-slate-50 text-slate-800  dark:bg-slate-950 min-h-screen dark:text-slate-50 transition-colors duration-300 text-left">
-
-      {/* 1. Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Credit Risk & AI Analytics</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Real-time portfolio evaluation, risk classifications, and predictive alerts.
-          </p>
-        </div>
-        {overview?.generated_at && (
-          <div className="flex items-center gap-2 text-xs font-semibold px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-slate-500 self-start sm:self-center shadow-xs">
-            <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-            Last Synced: {new Date(overview.generated_at).toLocaleString()}
-          </div>
-        )}
-      </div>
-
-      {/* 2. Metric Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-        <DashboardCard
-          title="Total Outstanding Portfolio"
-          data={`₹${(summary.total_outstanding / 10000000).toFixed(2)} Cr`}
-          icon={<LucideCircleDollarSign className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />}
-          trend={{ value: `${summary.npa_rate.toFixed(1)}% NPA Rate`, isPositive: summary.npa_rate < 15 }}
+    <div className="w-full p-6 space-y-8 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+        <DashboardCard 
+          title="Total loan portfolio" 
+          data="₹ 802 Cr." 
+          icon={<LucideCircleDollarSign className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />} 
+          trend={{ value: "+14.2%", isPositive: true }}
         />
         <DashboardCard
           title="Active Accounts"
@@ -180,11 +161,8 @@ function Dashboard() {
         />
       </div>
 
-      {/* 3. Charts & Analytics Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Trend Forecast Composed Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900/60 backdrop-blur-xs p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-6 flex flex-col justify-between">
+      <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xs p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-6 transition-all duration-300">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
           <div className="space-y-1">
             <div className="text-lg font-bold tracking-tight flex items-center gap-2">
               <div className="p-2 bg-indigo-50 dark:bg-indigo-950/50 rounded-lg text-indigo-600 dark:text-indigo-400">
@@ -194,35 +172,38 @@ function Dashboard() {
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">Forward-looking history of aggregate monthly prediction volumes and average default probabilities.</p>
           </div>
-
-          <div className="h-[300px] w-full pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={trends} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="4 4" vertical={false} className="text-slate-200 dark:text-slate-800" />
-                <XAxis dataKey="date" stroke="currentColor" className="text-slate-400" fontSize={11} fontWeight={500} tickLine={false} dy={10} />
-                <YAxis yAxisId="left" stroke="#6366f1" fontSize={11} fontWeight={500} tickLine={false} label={{ value: 'TOTAL PREDICTIONS', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6366f1', fontSize: 9, fontWeight: 700 } }} />
-                <YAxis yAxisId="right" orientation="right" stroke="#f59e0b" fontSize={11} fontWeight={500} tickLine={false} label={{ value: 'PROBABILITY OF DEFAULT (PD)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: '#f59e0b', fontSize: 9, fontWeight: 700 } }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="top" height={36} iconType="circle" iconSize={6} wrapperStyle={{ fontSize: '11px', fontWeight: 600 }} />
-
-                <Bar yAxisId="left" dataKey="total_predictions" name="Evaluations Processed" fill="#e0e7ff" stroke="#818cf8" strokeWidth={1} radius={[4, 4, 0, 0]} maxBarSize={45} className="fill-indigo-100/50 dark:fill-indigo-950/20" />
-                <Line yAxisId="right" type="monotone" dataKey="avg_pd_score" name="Avg Default Probability" stroke="#f59e0b" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
+          
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 self-end sm:self-center">
+            {(["3m", "6m", "12m"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTimeframe(t)}
+                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
+                  timeframe === t 
+                    ? "bg-white dark:bg-slate-950 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/30 dark:border-slate-800" 
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                }`}
+              >
+                Next {t.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Risk Distribution Bar Chart */}
-        <div className="bg-white dark:bg-slate-900/60 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
-          <div className="space-y-1">
-            <div className="text-lg font-bold tracking-tight flex items-center gap-2">
-              <div className="p-2 bg-rose-50 dark:bg-rose-950/50 rounded-lg text-rose-600 dark:text-rose-400">
-                <ShieldAlert className="w-4 h-4" />
-              </div>
-              Account Segment distribution
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Distribution of customers across risk classes.</p>
-          </div>
+        <div className="w-full pt-2">
+          <div className="h-[380px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={currentData} margin={{ top: 15, right: -5, left: -5, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="#c7d2fe" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="barGradientDark" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#312e81" stopOpacity={0.00} />
+                  </linearGradient>
+                </defs>
 
           <div className="h-[300px] w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -239,11 +220,8 @@ function Dashboard() {
 
       </div>
 
-      {/* 4. Lower Analytics: Loan Yield & Defaulters Registry */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Top Defaulters Sheet */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden flex flex-col justify-between">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden transition-all duration-300">
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
           <div>
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
