@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
+import { useAuthStore } from "./zustand/store";
 import {
   LayoutDashboard,
   Moon,
@@ -13,6 +14,8 @@ import profileImage from "../assets/profile.png";
 const Sidebar = () => {
   const { theme, setTheme } = useTheme();
   const location = useLocation();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const getGreeting = () => {
     const hr = new Date().getHours();
@@ -76,12 +79,12 @@ const Sidebar = () => {
             </Button>
           </div>
 
-          <div className="flex flex-col mt-4 space-y-0.5">
+          <div className="flex flex-col mt-4 space-y-0.5 text-left">
             <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
-            <h3 className="text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-100">
-              {getGreeting()}, <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">Rohan</span>!
+            <h3 className="text-lg font-bold tracking-tight text-gray-900 dark:text-zinc-100 truncate">
+              {getGreeting()}, <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400 capitalize">{user?.username || "Rohan"}</span>!
             </h3>
           </div>
         </div>
@@ -95,6 +98,22 @@ const Sidebar = () => {
               <LayoutDashboard className="w-4 h-4" />
               <span>Dashboard</span>
               {location.pathname !== "/dashboard" && (
+                <div className="absolute right-3 w-1 h-1 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity dark:bg-blue-400" />
+              )}
+            </NavLink>
+
+            <NavLink to="/risk" className={getNavLinkClass("/risk")}>
+              <ShieldAlert className="w-4 h-4" />
+              <span>Risk Audit</span>
+              {location.pathname !== "/risk" && (
+                <div className="absolute right-3 w-1 h-1 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity dark:bg-blue-400" />
+              )}
+            </NavLink>
+
+            <NavLink to="/loans" className={getNavLinkClass("/loans")}>
+              <CreditCard className="w-4 h-4" />
+              <span>Loans Registry</span>
+              {location.pathname !== "/loans" && (
                 <div className="absolute right-3 w-1 h-1 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity dark:bg-blue-400" />
               )}
             </NavLink>
