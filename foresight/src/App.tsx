@@ -1,12 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Layout from "./components/layout";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import Login from "./pages/Login";
-import CustomerRisk from "./pages/CustomerRisk";
-import Loans from "./pages/Loans";
 import { useAuthStore } from "./components/zustand/store";
+import CustomerRisk from "./pages/CustomerRisk";
+import Dashboard from "./pages/Dashboard";
+import Loans from "./pages/Loans";
+import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 
 function App() {
   const token = useAuthStore((state) => state.token);

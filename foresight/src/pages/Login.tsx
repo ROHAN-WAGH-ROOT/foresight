@@ -1,8 +1,8 @@
+import { AlertCircle, Compass, Loader2, Lock, User } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginApi, getMeApi } from "../components/api";
+import { getMeApi, loginApi } from "../components/api";
 import { useAuthStore } from "../components/zustand/store";
-import { Compass, Lock, User, AlertCircle, Loader2 } from "lucide-react";
 
 function Login() {
   const [username, setUsername] = useState("");

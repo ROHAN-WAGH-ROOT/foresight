@@ -1,55 +1,68 @@
-import { DashboardCard } from "@/components/ui/Dashboardcards";
-import { ArrowUpRight, Calendar, Landmark, LucideCircleDollarSign, ShieldAlert } from "lucide-react";
-import { useState } from "react";
-import { Bar, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
-const PREDICTIVE_DATA = {
-  "3m": [
-    { month: "Month 1", Medium: 240, High: 56, Defaults: 800, NetChange: "+4.2%" },
-    { month: "Month 2", Medium: 250, High: 62, Defaults: 950, NetChange: "+6.1%" },
-    { month: "Month 3", Medium: 270, High: 70, Defaults: 1100, NetChange: "+8.3%" },
-  ],
-  "6m": [
-    { month: "Month 1", Medium: 240, High: 56, Defaults: 800, NetChange: "+4.2%" },
-    { month: "Month 2", Medium: 250, High: 62, Defaults: 950, NetChange: "+6.1%" },
-    { month: "Month 3", Medium: 270, High: 70, Defaults: 1100, NetChange: "+8.3%" },
-    { month: "Month 4", Medium: 290, High: 85, Defaults: 1300, NetChange: "+5.0%" },
-    { month: "Month 5", Medium: 310, High: 92, Defaults: 1450, NetChange: "+3.8%" },
-    { month: "Month 6", Medium: 330, High: 105, Defaults: 1600, NetChange: "+7.2%" },
-  ],
-  "12m": [
-    { month: "M1", Medium: 240, High: 56, Defaults: 800, NetChange: "+4.2%" },
-    { month: "M2", Medium: 250, High: 62, Defaults: 950, NetChange: "+6.1%" },
-    { month: "M3", Medium: 270, High: 70, Defaults: 1100, NetChange: "+8.3%" },
-    { month: "M4", Medium: 290, High: 85, Defaults: 1300, NetChange: "+5.0%" },
-    { month: "M5", Medium: 310, High: 92, Defaults: 1450, NetChange: "+3.8%" },
-    { month: "M6", Medium: 260, High: 105, Defaults: 1600, NetChange: "+7.2%" },
-    { month: "M7", Medium: 340, High: 110, Defaults: 1750, NetChange: "+2.1%" },
-    { month: "M8", Medium: 350, High: 115, Defaults: 1900, NetChange: "+1.9%" },
-    { month: "M9", Medium: 360, High: 120, Defaults: 2000, NetChange: "+0.8%" },
-    { month: "M10", Medium: 365, High: 130, Defaults: 2150, NetChange: "+4.1%" },
-    { month: "M11", Medium: 370, High: 142, Defaults: 2300, NetChange: "+5.5%" },
-    { month: "M12", Medium: 380, High: 156, Defaults: 2500, NetChange: "+6.8%" },
-  ]
-};
+import AccountDistribution from "@/components/graphs/AccountDistribution";
+import PortfolioTrend from "@/components/graphs/PortfolioTrend";
+import {
+  Briefcase,
+  Building2,
+  Calendar,
+  Car,
+  ChevronLeft,
+  ChevronRight,
+  Coins,
+  GraduationCap,
+  Home,
+  Landmark,
+  Loader2,
+  LucideCircleDollarSign,
+  Percent,
+  ShieldAlert,
+  User,
+  Users
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  getDashboardOverviewApi,
+  getLoanPerformanceApi,
+  getLoansByTypeApi,
+  getRiskDistributionApi,
+  getRiskTrendApi,
+  getTopDefaultersApi,
+  type DashboardOverview,
+  type ListLoansResponse,
+  type LoanPerformanceItem,
+  type RiskDistributionItem,
+  type RiskTrendItem,
+  type TopDefaulter,
+} from "../components/api";
+import { DashboardCard } from "../components/ui/Dashboardcards";
+import MsmeDashboard from "./MsmeDashboard";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl shadow-xl space-y-2 min-w-[180px]">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {label}
+          </span>
           <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
         </div>
         <div className="space-y-1">
           {payload.map((item: any, idx: number) => (
-            <div key={idx} className="flex items-center justify-between gap-4 text-xs">
+            <div
+              key={idx}
+              className="flex items-center justify-between gap-4 text-xs"
+            >
               <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.stroke || item.fill }} />
+                <span
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: item.stroke || item.fill }}
+                />
                 <span>{item.name}:</span>
               </div>
               <span className="font-semibold text-slate-900 dark:text-slate-50">
-                {typeof item.value === "number" && item.value < 1 ? `${(item.value * 100).toFixed(1)}%` : item.value.toLocaleString()}
+                {typeof item.value === "number" && item.value < 1
+                  ? `${(item.value * 100).toFixed(1)}%`
+                  : item.value.toLocaleString()}
               </span>
             </div>
           ))}
@@ -60,24 +73,70 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+const loanTypes = [
+  { name: "Home Loan", icon: Home, barColor: "bg-indigo-500" },
+  { name: "Personal Loan", icon: User, barColor: "bg-fuchsia-500" },
+  { name: "Auto Loan", icon: Car, barColor: "bg-rose-500" },
+  { name: "Business Loan", icon: Briefcase, barColor: "bg-cyan-500" },
+  { name: "Education Loan", icon: GraduationCap, barColor: "bg-violet-500" },
+  { name: "Gold Loan", icon: Coins, barColor: "bg-amber-500" },
+];
+
 function Dashboard() {
+  const [dashboardType, setDashboardType] = useState<"personal" | "msme">(
+    "personal",
+  );
+
+  // Personal Dashboard State
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [trends, setTrends] = useState<RiskTrendItem[]>([]);
-  const [distributions, setDistributions] = useState<RiskDistributionItem[]>([]);
+  const [distributions, setDistributions] = useState<RiskDistributionItem[]>(
+    [],
+  );
   const [performance, setPerformance] = useState<LoanPerformanceItem[]>([]);
   const [defaulters, setDefaulters] = useState<TopDefaulter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [selectedLoanType, setSelectedLoanType] = useState<string>("Home Loan");
+  const [typeLoansResponse, setTypeLoansResponse] =
+    useState<ListLoansResponse | null>(null);
+  const [isTypeLoansLoading, setIsTypeLoansLoading] = useState(false);
+  const [typeLoansPage, setTypeLoansPage] = useState(1);
+
+  // Fetch loan list specific to selected type on Personal Dashboard
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    if (dashboardType !== "personal") return;
+
+    const fetchLoansByType = async () => {
+      setIsTypeLoansLoading(true);
       try {
-        const [overviewRes, trendsRes, distRes, perfRes, defsRes] = await Promise.all([
-          getDashboardOverviewApi(),
-          getRiskTrendApi(),
-          getRiskDistributionApi(),
-          getLoanPerformanceApi(),
-          getTopDefaultersApi(15)
-        ]);
+        const res = await getLoansByTypeApi(selectedLoanType, typeLoansPage, 8);
+        setTypeLoansResponse(res);
+      } catch (error) {
+        console.error("Failed to fetch loans by type:", error);
+      } finally {
+        setIsTypeLoansLoading(false);
+      }
+    };
+
+    fetchLoansByType();
+  }, [selectedLoanType, typeLoansPage, dashboardType]);
+
+  // Fetch overview metrics on Personal Dashboard mount
+  useEffect(() => {
+    if (dashboardType !== "personal") return;
+
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      try {
+        const [overviewRes, trendsRes, distRes, perfRes, defsRes] =
+          await Promise.all([
+            getDashboardOverviewApi(),
+            getRiskTrendApi(),
+            getRiskDistributionApi(),
+            getLoanPerformanceApi(),
+            getTopDefaultersApi(15),
+          ]);
 
         setOverview(overviewRes);
         setTrends(trendsRes);
@@ -92,18 +151,25 @@ function Dashboard() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [dashboardType]);
 
-  if (isLoading) {
+  const handleLoanTypeSelect = (type: string) => {
+    setSelectedLoanType(type);
+    setTypeLoansPage(1);
+  };
+
+  // Personal Dashboard Loading indicator
+  if (dashboardType === "personal" && isLoading) {
     return (
       <div className="w-full min-h-screen flex flex-col items-center justify-center gap-3 bg-slate-50 dark:bg-slate-950 text-slate-400">
         <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
-        <span className="text-sm font-semibold">Loading portfolios risk matrices...</span>
+        <span className="text-sm font-semibold">
+          Loading portfolios risk matrices...
+        </span>
       </div>
     );
   }
 
-  // Fallback / Defaults if overview is empty
   const summary = overview?.portfolio_summary || {
     total_customers: 0,
     total_loans: 0,
@@ -113,234 +179,259 @@ function Dashboard() {
     high_risk_count: 0,
     critical_risk_count: 0,
     npa_rate: 0,
-    avg_credit_score: 0
+    avg_credit_score: 0,
   };
 
   const getRiskColor = (category: string) => {
     switch (category?.toUpperCase()) {
       case "CRITICAL":
-        return "text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:text-rose-450 dark:border-rose-900/30";
+        return "text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/30";
       case "HIGH":
-        return "text-orange-600 bg-orange-50 border-orange-200 dark:bg-orange-950/30 dark:text-orange-450 dark:border-orange-900/30";
+        return "text-orange-600 bg-orange-50 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900/30";
       case "MEDIUM":
-        return "text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:text-amber-405 dark:border-amber-900/30";
+        return "text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/30";
       case "LOW":
-        return "text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-450 dark:border-emerald-900/30";
+        return "text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30";
       default:
-        return "text-slate-500 bg-slate-50 border-slate-200";
+        return "text-slate-500 bg-slate-50 border-slate-200 dark:bg-zinc-900 dark:text-zinc-400";
     }
   };
 
+  const formatINR = (value: number) => {
+    if (value === undefined || value === null || isNaN(value)) return "₹0.00";
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const containerBg =
+    "bg-slate-50 text-slate-800 dark:bg-slate-950 min-h-screen dark:text-slate-400 transition-colors duration-550 text-left select-none";
+
   return (
-    <div className="w-full p-6 space-y-8 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-        <DashboardCard 
-          title="Total loan portfolio" 
-          data="₹ 802 Cr." 
-          icon={<LucideCircleDollarSign className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />} 
-          trend={{ value: "+14.2%", isPositive: true }}
-        />
-        <DashboardCard
-          title="Active Accounts"
-          data={summary.total_loans.toLocaleString()}
-          icon={<Landmark className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />}
-          trend={{ value: `${summary.total_customers.toLocaleString()} Customers`, isPositive: true }}
-        />
-        <DashboardCard
-          title="Critical Risk Accounts"
-          data={summary.critical_risk_count.toString()}
-          icon={<ShieldAlert className="w-5 h-5 text-rose-500" />}
-          trend={{ value: `${summary.high_risk_count} High Risk`, isPositive: false }}
-        />
-        <DashboardCard
-          title="Average Credit Score"
-          data={summary.avg_credit_score.toFixed(0)}
-          icon={<Users className="w-5 h-5 text-amber-500" />}
-          trend={{ value: `PD Score: ${(summary.avg_pd_score * 100).toFixed(1)}%`, isPositive: summary.avg_pd_score < 0.25 }}
-        />
-      </div>
-
-      <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xs p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-6 transition-all duration-300">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-5">
-          <div className="space-y-1">
-            <div className="text-lg font-bold tracking-tight flex items-center gap-2">
-              <div className="p-2 bg-indigo-50 dark:bg-indigo-950/50 rounded-lg text-indigo-600 dark:text-indigo-400">
-                <LineIcon className="w-4 h-4" />
-              </div>
-              Portfolio Risk & Prediction Trend
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Forward-looking history of aggregate monthly prediction volumes and average default probabilities.</p>
+    <div className={`w-full p-6 space-y-8 ${containerBg}`}>
+      {/* Dynamic Unified Header with Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5 border-slate-200/85 dark:border-slate-800/80">
+        <div>
+          <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            {dashboardType === "msme"
+              ? "MSME Enterprise Risk Command"
+              : "Credit Risk & AI Analytics"}
           </div>
-          
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 self-end sm:self-center">
-            {(["3m", "6m", "12m"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTimeframe(t)}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                  timeframe === t 
-                    ? "bg-white dark:bg-slate-950 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/30 dark:border-slate-800" 
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-                }`}
-              >
-                Next {t.toUpperCase()}
-              </button>
-            ))}
-          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {dashboardType === "msme"
+              ? "Predict business defaults, audit enterprise credit risks, evaluate batch models, and inspect commercial profiles."
+              : "Real-time portfolio evaluation, risk classifications, and predictive alerts."}
+          </p>
         </div>
 
-        <div className="w-full pt-2">
-          <div className="h-[380px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={currentData} margin={{ top: 15, right: -5, left: -5, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#818cf8" stopOpacity={0.25} />
-                    <stop offset="100%" stopColor="#c7d2fe" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="barGradientDark" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#312e81" stopOpacity={0.00} />
-                  </linearGradient>
-                </defs>
-
-          <div className="h-[300px] w-full pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={distributions} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="4 4" vertical={false} className="text-slate-200 dark:text-slate-800" />
-                <XAxis dataKey="category" stroke="currentColor" className="text-slate-400" fontSize={11} fontWeight={500} tickLine={false} dy={10} />
-                <YAxis stroke="currentColor" className="text-slate-400" fontSize={11} fontWeight={500} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="Accounts Volume" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} className="fill-rose-500/80 dark:fill-rose-600/60" />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Workspace Switcher Pill Controls */}
+        <div className="flex items-center gap-3 self-start sm:self-center">
+          <div className="flex items-center gap-0.5 p-0.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-inner">
+            <button
+              onClick={() => setDashboardType("personal")}
+              className={`px-3.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                dashboardType === "personal"
+                  ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-50 shadow-xs"
+                  : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+              }`}
+            >
+              Individual
+            </button>
+            <button
+              onClick={() => setDashboardType("msme")}
+              className={`px-3.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                dashboardType === "msme"
+                  ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-50 shadow-xs"
+                  : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+              }`}
+            >
+              MSME
+            </button>
           </div>
-        </div>
 
+          {["personal", "msme"].includes(dashboardType) &&
+            overview?.generated_at && (
+              <div className="hidden md:flex items-center gap-2 text-xs font-semibold px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-slate-500 shadow-xs">
+                <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                Last Synced: {new Date(overview.generated_at).toLocaleString()}
+              </div>
+            )}
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden transition-all duration-300">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-          <div>
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold">Top Delinquent Defaulters</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">List of critical credit default exposure risk accounts.</p>
-              </div>
+      {/* Render Active Workspace Screen */}
+      {dashboardType === "msme" ? (
+        <MsmeDashboard />
+      ) : (
+        <>
+          {/* Metric Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full">
+            <DashboardCard
+              title="Total Outstanding"
+              data={`₹${(summary.total_outstanding / 10000000).toFixed(2)} Cr`}
+              icon={
+                <LucideCircleDollarSign className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+              }
+              trend={{
+                value: `${summary.npa_rate.toFixed(1)}% NPA Rate`,
+                isPositive: summary.npa_rate < 15,
+              }}
+            />
+            <DashboardCard
+              title="Active Loans"
+              data={summary.total_loans.toLocaleString()}
+              icon={
+                <Landmark className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+              }
+              trend={{
+                value: `${summary.total_customers.toLocaleString()} Customers`,
+                isPositive: true,
+              }}
+            />
+            <DashboardCard
+              title="Critical Risk Accounts"
+              data={summary.critical_risk_count.toString()}
+              icon={<ShieldAlert className="w-5 h-5 text-rose-500" />}
+              trend={{
+                value: `${summary.high_risk_count} High Risk`,
+                isPositive: false,
+              }}
+            />
+            <DashboardCard
+              title="Average Credit Score"
+              data={summary.avg_credit_score.toFixed(0)}
+              icon={<Users className="w-5 h-5 text-amber-500" />}
+              trend={{
+                value: `PD Score: ${(summary.avg_pd_score * 100).toFixed(1)}%`,
+                isPositive: summary.avg_pd_score < 0.25,
+              }}
+            />
+          </div>
+
+          {/* Charts & Analytics Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PortfolioTrend trends={trends} />
+            <AccountDistribution distributions={distributions} />
+          </div>
+
+          {/* Accounts Split Segment by Loan Types */}
+          {/* <div className="p-5 bg-white dark:bg-zinc-900/30 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xs">
+            <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4 mb-5">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+                Accounts Ledger by Loan Segment
+              </h3>
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+                Inspect segmented retail facilities and predictive parameters across credit types.
+              </p>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/70 dark:bg-slate-800/40 text-xs font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                    <th className="py-3 px-4">Rank</th>
-                    <th className="py-3 px-4">Customer</th>
-                    <th className="py-3 px-4">City</th>
-                    <th className="py-3 px-4 text-center">Credit Score</th>
-                    <th className="py-3 px-4 text-right">PD Score</th>
-                    <th className="py-3 px-4 text-right">Outstanding</th>
-                    <th className="py-3 px-4 text-center">Risk Tier</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                  {defaulters.slice(0, 8).map((row) => (
-                    <tr key={row.customer_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                      <td className="py-3 px-4 font-bold text-slate-400">{row.rank}</td>
-                      <td className="py-3 px-4 font-semibold">{row.customer_name}</td>
-                      <td className="py-3 px-4 text-slate-500">{row.city}</td>
-                      <td className="py-3 px-4 text-center font-medium">{row.credit_score}</td>
-                      <td className="py-3 px-4 text-right font-semibold text-rose-500">{(row.pd_score * 100).toFixed(1)}%</td>
-                      <td className="py-3 px-4 text-right font-medium">₹{row.total_outstanding.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold border ${getRiskColor(row.risk_category)}`}>
-                          {row.risk_category}
-                        </span>
-                      </td>
-                    </tr>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
+              {loanTypes.map((item) => {
+                const IconComp = item.icon;
+                const isSelected = selectedLoanType === item.name;
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => handleLoanTypeSelect(item.name)}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg border whitespace-nowrap cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-950/40 dark:border-indigo-900/50 dark:text-indigo-400"
+                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/60"
+                    }`}
+                  >
+                    <IconComp className={`w-3.5 h-3.5 ${isSelected ? "text-indigo-500" : "text-zinc-400"}`} />
+                    {item.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {isTypeLoansLoading && !typeLoansResponse ? (
+              <div className="py-16 text-center text-xs font-mono text-zinc-400">
+                Fetching retail segments ledger...
+              </div>
+            ) : typeLoansResponse && typeLoansResponse.items.length > 0 ? (
+              <div className={`space-y-5 transition-opacity duration-200 ${isTypeLoansLoading ? "opacity-65" : "opacity-100"}`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                  {typeLoansResponse.items.map((loan: any) => (
+                    <div
+                      key={loan.id || loan.loan_id}
+                      className="bg-zinc-50/50 dark:bg-zinc-950/20 border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col justify-between min-h-[140px]"
+                    >
+                      <div className="space-y-1 text-left">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded">
+                            #{loan.id || loan.loan_id}
+                          </span>
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border uppercase ${getRiskColor(loan.risk_level || loan.risk_category)}`}>
+                            {loan.risk_level || loan.risk_category || "UNKNOWN"}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate pt-1">
+                          {loan.customer_name || loan.business_name}
+                        </h4>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-800/60 text-left">
+                        <div>
+                          <div className="text-[9px] text-zinc-400 font-medium mb-0.5 flex items-center gap-0.5">
+                            <LucideCircleDollarSign className="w-2.5 h-2.5 shrink-0 text-zinc-300" /> Balance
+                          </div>
+                          <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate">
+                            {formatINR(loan.total_outstanding || loan.outstanding_amount)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] text-zinc-400 font-medium mb-0.5 flex items-center gap-0.5">
+                            <Percent className="w-2.5 h-2.5 shrink-0 text-zinc-300" /> Default Prob.
+                          </div>
+                          <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200 font-mono">
+                            {((loan.probability_of_default || loan.pd_score || 0) * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Loan Yield Performance Sheet */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden flex flex-col justify-between">
-          <div>
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-base font-bold">Loan Product Yield</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Yield and default counts aggregated per loan product type.</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50/70 dark:bg-slate-800/40 font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                    <th className="py-3.5 px-5">Product Type</th>
-                    <th className="py-3.5 px-5 text-center">Status</th>
-                    <th className="py-3.5 px-5 text-right">Count</th>
-                    <th className="py-3.5 px-5 text-right">Outstanding</th>
-                    <th className="py-3.5 px-5 text-right">Avg DPD</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-                  {performance.slice(0, 8).map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                      <td className="py-3.5 px-5 font-semibold text-slate-900 dark:text-slate-100">{row.loan_type}</td>
-                      <td className="py-3.5 px-5 text-center">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold ${row.status === "ACTIVE"
-                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400"
-                          : row.status === "CLOSED"
-                            ? "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400"
-                            : "bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400 animate-pulse"
-                          }`}>
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-5 text-right font-semibold">{row.count}</td>
-                      <td className="py-3.5 px-5 text-right text-rose-600 dark:text-rose-450">₹{(row.total_outstanding / 10000000).toFixed(2)} Cr</td>
-                      <td className={`py-3.5 px-5 text-right font-bold ${row.avg_dpd > 30 ? "text-rose-500" : "text-slate-400"}`}>{row.avg_dpd.toFixed(1)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* 5. Alerts Section Feed */}
-      {overview && overview.top_alerts && overview.top_alerts.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl p-6 text-left">
-          <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
-            <AlertTriangle className="w-5 h-5 text-rose-500" />
-            <h3 className="text-base font-bold text-rose-600 dark:text-rose-400">Critical Underwriting Alerts Feed</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {overview.top_alerts.slice(0, 6).map((alert) => (
-              <div
-                key={alert.customer_id}
-                className="p-4 border border-rose-100 dark:border-rose-950 bg-rose-500/5 hover:bg-rose-500/10 transition-colors rounded-xl flex flex-col justify-between text-xs gap-2.5"
-              >
-                <div className="flex justify-between items-start">
-                  <span className="font-semibold text-slate-950 dark:text-white">{alert.customer_name}</span>
-                  <span className="font-bold text-[10px] px-2 py-0.5 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400 rounded">
-                    {alert.risk_category}
-                  </span>
                 </div>
-                <p className="text-slate-600 dark:text-slate-350 text-[11px] font-medium leading-relaxed">
-                  {alert.top_reason}
-                </p>
-                <div className="flex justify-between items-center text-[10px] text-slate-400 font-semibold border-t border-rose-100/30 dark:border-rose-950/30 pt-2">
-                  <span>ID: {alert.customer_code}</span>
-                  <span>PD: {(alert.pd_score * 100).toFixed(2)}%</span>
-                </div>
+
+                {typeLoansResponse.pages > 1 && (
+                  <div className="p-2.5 bg-zinc-50 dark:bg-zinc-900/30 rounded-lg border border-zinc-200 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-medium text-zinc-500">
+                    <span>
+                      Showing matching items out of <strong className="text-zinc-700 dark:text-zinc-300">{typeLoansResponse.total}</strong> accounts
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setTypeLoansPage((p) => Math.max(p - 1, 1))}
+                        disabled={typeLoansPage === 1 || isTypeLoansLoading}
+                        className="p-1 rounded bg-white hover:bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-colors"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="px-2 py-0.5 bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 rounded border border-zinc-200 dark:border-zinc-800 font-mono">
+                        {typeLoansPage} / {typeLoansResponse.pages}
+                      </span>
+                      <button
+                        onClick={() => setTypeLoansPage((p) => Math.min(p + 1, typeLoansResponse.pages))}
+                        disabled={typeLoansPage === typeLoansResponse.pages || isTypeLoansLoading}
+                        className="p-1 rounded bg-white hover:bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-colors"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
+            ) : (
+              <div className="py-12 text-center text-xs text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
+                No active loans found under the "{selectedLoanType}" facility type.
+              </div>
+            )}
+          </div> */}
+        </>
       )}
-
     </div>
   );
 }
