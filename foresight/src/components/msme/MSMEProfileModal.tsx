@@ -10,13 +10,11 @@ import {
   RefreshCw,
   ShieldAlert,
   TrendingUp,
-  X
+  X,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   getBusinessRiskHistoryApi,
-  getEarlyBusinessWarningAlertsApi,
-  getHighRiskBusinessesApi,
   getMSMELoansApi,
   getMSMEProfileApi,
   predictMsmeRiskApi,
@@ -29,18 +27,20 @@ interface MSMEProfileModalProps {
   onEvaluationComplete?: () => void;
 }
 
+const riskStyles = {
+  CRITICAL: "text-rose-400 border-rose-500/30 bg-rose-500/10",
+  HIGH: "text-amber-500 border-amber-500/30 bg-amber-500/10",
+  MEDIUM: "text-yellow-400 border-yellow-500/30 bg-yellow-500/10",
+  LOW: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
+};
+
 export default function MSMEProfileModal({
   businessId,
   onClose,
   onEvaluationComplete,
 }: MSMEProfileModalProps) {
-  // Global & Alert Queue States
-  // const [highRiskBusinesses, setHighRiskBusinesses] = useState<any[]>([]);
-  // const [earlyBusinessWarnings, setEarlyBusinessWarnings] = useState<any[]>([]);
-
   // Profile Data States
   const [businessProfile, setBusinessProfile] = useState<any | null>(null);
-  console.log("businessprofile:", businessProfile);
   const [businessLoans, setBusinessLoans] = useState<any[]>([]);
   const [businessHistory, setBusinessHistory] = useState<any[]>([]);
 
@@ -55,26 +55,14 @@ export default function MSMEProfileModal({
   const [error, setError] = useState<string | null>(null);
   const [loansError, setLoansError] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const currentCategory = businessProfile?.latest_risk?.risk_category;
+const activeStyle = riskStyles[currentCategory] || "text-white border-white/10 bg-slate-800/50";
 
   const [activeTab, setActiveTab] = useState<"summary" | "loans" | "history">(
     "summary",
   );
 
   const isOpen = businessId !== null && businessId !== undefined;
-
-  // Initialize early warnings and high risk queue for businesses
-  const loadBusinessQueues = useCallback(async () => {
-    try {
-      // const warnings = await getEarlyBusinessWarningAlertsApi();
-      // setEarlyBusinessWarnings(warnings);
-
-      // const highRisk = await getHighRiskBusinessesApi("HIGH");
-      // setHighRiskBusinesses(highRisk);
-    } catch (err: any) {
-      console.error("Failed to load business warning queues:", err);
-    }
-  }, []);
-
   // Fetch functions for profile segments
   const fetchProfile = useCallback(async (id: number) => {
     setIsProfileLoading(true);
@@ -134,8 +122,6 @@ export default function MSMEProfileModal({
         fetchRiskHistory(numericId),
       ]);
 
-      await loadBusinessQueues();
-
       if (onEvaluationComplete) {
         onEvaluationComplete();
       }
@@ -149,14 +135,8 @@ export default function MSMEProfileModal({
     fetchProfile,
     fetchLoansList,
     fetchRiskHistory,
-    loadBusinessQueues,
     onEvaluationComplete,
   ]);
-
-  // Initial loading loop for active global queues
-  useEffect(() => {
-    loadBusinessQueues();
-  }, [loadBusinessQueues]);
 
   // Orchestration context loop when specific business modal opens
   useEffect(() => {
@@ -261,57 +241,11 @@ export default function MSMEProfileModal({
     }
   };
 
-  // SVG circular radial score indicator ring component
-  // const HistoryScoreRing = ({
-  //   value,
-  //   color,
-  // }: {
-  //   value: number;
-  //   color: string;
-  // }) => {
-  //   const radius = 16;
-  //   const stroke = 3;
-  //   const normalizedValue = Math.min(Math.max(value, 0), 1);
-  //   const circumference = radius * 2 * Math.PI;
-  //   const strokeDashoffset = circumference - normalizedValue * circumference;
-
-  //   return (
-  //     <div className="relative flex items-center justify-center w-10 h-10 shrink-0">
-  //       <svg className="w-full h-full -rotate-90">
-  //         <circle
-  //           cx="20"
-  //           cy="20"
-  //           r={radius}
-  //           stroke="currentColor"
-  //           strokeWidth={stroke}
-  //           fill="transparent"
-  //           className="text-slate-200 dark:text-slate-800"
-  //         />
-  //         <circle
-  //           cx="20"
-  //           cy="20"
-  //           r={radius}
-  //           stroke={color}
-  //           strokeWidth={stroke}
-  //           fill="transparent"
-  //           strokeDasharray={circumference}
-  //           strokeDashoffset={strokeDashoffset}
-  //           strokeLinecap="round"
-  //           className="transition-all duration-500 ease-out"
-  //         />
-  //       </svg>
-  //       <span className="absolute text-[10px] font-mono font-bold text-slate-800 dark:text-slate-200">
-  //         {Math.round(normalizedValue * 100)}
-  //       </span>
-  //     </div>
-  //   );
-  // };
-
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 selection:bg-blue-500/30"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/40 backdrop-blur-xs p-4 sm:p-6 md:p-10 flex items-start justify-center"
       role="dialog"
       aria-modal="true"
     >
@@ -320,9 +254,8 @@ export default function MSMEProfileModal({
         className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/80 backdrop-blur-md transition-opacity duration-300"
         onClick={onClose}
       />
-
       {/* Main Structural Layout Viewport Frame */}
-      <div className="relative w-full max-w-6xl h-[90vh] md:h-[85vh] flex flex-col bg-white dark:bg-[#0A0E1A] border border-slate-200 dark:border-slate-900 rounded-2xl shadow-[0_24px_70px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_24px_70px_-15px_rgba(0,0,0,0.9)] overflow-hidden animate-in zoom-in-98 duration-150 text-slate-900 dark:text-slate-100">
+      <div className="relative max-w-6xl w-full  md:h-[89vh] min-h-0 max-h-full md:max-h-170 flex flex-col bg-white dark:bg-[#0A0E1A] border border-slate-200 dark:border-slate-900/50 rounded-2xl shadow-[0_24px_70px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_24px_70px_-15px_rgba(0,0,0,0.9)] overflow-hidden animate-in zoom-in-98 duration-150 text-slate-900 dark:text-slate-100">
         {/* TOP SYSTEM CONTROLS HEADER BAR */}
         <div className="flex items-center justify-end px-4 py-2 border-b border-slate-100 dark:border-slate-900/60 bg-slate-50 dark:bg-[#0E1322]/40 gap-2 shrink-0">
           <button
@@ -365,13 +298,15 @@ export default function MSMEProfileModal({
                   </div>
                   <div className="space-y-1 min-w-0">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-none">
-                      {businessProfile?.business?.business_name} <span
-                      className={`px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase border rounded bg-black/20 ${businessProfile?.latest_risk?.risk_category === "CRITICAL" ? "text-red-600 border-rose-500/30" : "text-white border-white/10"}`}
-                    >
-                      {businessProfile?.latest_risk?.risk_category || "UNKNOWN"}
-                    </span>
+                      {businessProfile?.business?.business_name}{" "}
+                      <span
+                        className={`px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase border rounded bg-black/20 ${activeStyle}`}
+                      >
+                        {businessProfile?.latest_risk?.risk_category ||
+                          "UNKNOWN"}
+                      </span>
                     </h2>
-                    
+
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400 font-medium pt-1">
                       <span className="font-mono text-slate-400 dark:text-slate-500">
                         ID:{" "}
@@ -401,7 +336,7 @@ export default function MSMEProfileModal({
                   <button
                     onClick={handleEvaluateBusinessRisk}
                     disabled={isEvaluating}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40"
+                    className="px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40"
                   >
                     {isEvaluating ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -413,7 +348,7 @@ export default function MSMEProfileModal({
 
                   <button
                     onClick={() => setOpenModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white dark:hover:from-blue-500 dark:hover:to-indigo-500 text-slate-800 dark:text-white font-semibold text-xs rounded-xl shadow-sm border border-slate-200 dark:border-transparent transition-all flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white dark:hover:from-blue-500 dark:hover:to-indigo-500 dark:text-white font-semibold text-xs rounded-xl shadow-sm border border-slate-200 dark:border-transparent transition-all flex items-center gap-2 cursor-pointer"
                   >
                     AI Recommended Action Plan
                   </button>
@@ -425,17 +360,10 @@ export default function MSMEProfileModal({
                 isOpen={openModal}
                 onClose={() => setOpenModal(false)}
                 title="AI Recommended Action"
-                  
               >
                 {(() => {
-                  // let features = {};
                   let actions = [];
                   let reasons = [];
-                  try {
-                    // features = JSON.parse(
-                    //   businessProfile?.latest_risk?.feature_importance || "{}",
-                    // );
-                  } catch (e) {}
                   try {
                     actions = JSON.parse(
                       businessProfile?.latest_risk?.recommended_action || "[]",
@@ -486,34 +414,7 @@ export default function MSMEProfileModal({
                           <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white mt-1 block">
                             {businessProfile?.latest_risk?.risk_score || "0"}%
                           </span>
-                          {/* <p className="text-[11px] text-slate-400 mt-1">
-                            Probability: {businessProfile?.latest_risk?.default_probability_pct}%
-                          </p> */}
                         </div>
-
-                        {/* <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-3 flex flex-col justify-between">
-                          <div>
-                            <span className="text-xs font-medium text-slate-500 block">
-                              Top Trigger Profile
-                            </span>
-                            <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-0.5 block truncate capitalize">
-                              {Object.keys(features)[0]?.replace(/_/g, " ") ||
-                                "No metrics matched"}
-                            </span>
-                          </div>
-                          <div className="mt-2 flex items-end gap-1.5 h-6">
-                            {Object.values(features).map((val: any, index) => (
-                              <div
-                                key={index}
-                                className="w-full bg-indigo-500 rounded-t-sm transition-all duration-300"
-                                style={{
-                                  height: `${Math.min((val / 2) * 100, 100)}%`,
-                                }}
-                                title={`Weight: ${val}`}
-                              />
-                            ))}
-                          </div>
-                        </div> */}
                       </div>
 
                       {reasons.length > 1 && (
@@ -607,7 +508,7 @@ export default function MSMEProfileModal({
                     txt: "text-rose-600 dark:text-rose-500 font-mono",
                   },
                   {
-                    title: "Probability of Default (PD)",
+                    title: "Probability of Default",
                     val: `${(
                       businessProfile?.latest_risk?.default_probability_pct ?? 0
                     ).toFixed(2)}%`,
@@ -833,7 +734,7 @@ export default function MSMEProfileModal({
                   ) : (
                     <div className="relative pl-1 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar">
                       {/* connective timeline spine */}
-                      <div className="absolute left-[15px] top-4 bottom-4 w-px bg-gradient-to-b from-slate-200 dark:from-slate-700 via-slate-100 dark:via-slate-800 to-transparent" />
+                      <div className="absolute left-3.75 top-4 bottom-4 w-px bg-linear-to-b from-slate-200 dark:from-slate-700 via-slate-100 dark:via-slate-800 to-transparent" />
 
                       <div className="space-y-3">
                         {businessHistory.map((item, index) => {
@@ -846,7 +747,7 @@ export default function MSMEProfileModal({
                             >
                               {/* timeline node */}
                               <div
-                                className="absolute left-[10px] top-[22px] w-2.5 h-2.5 rounded-full bg-white dark:bg-slate-950 ring-2 ring-offset-2"
+                                className="absolute left-2.5 top-5.5 w-2.5 h-2.5 rounded-full bg-white dark:bg-slate-950 ring-2 ring-offset-2"
                                 style={
                                   {
                                     "--tw-ring-color": meta.ring,
@@ -855,7 +756,7 @@ export default function MSMEProfileModal({
                               />
 
                               <div
-                                className={`group relative rounded-2xl border ${meta.border} bg-gradient-to-br ${meta.grad} bg-white dark:bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300 hover:-translate-y-0.5 ${meta.glow} flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs overflow-hidden shadow-sm dark:shadow-none`}
+                                className={`group relative rounded-2xl border ${meta.border} bg-linear-to-br ${meta.grad} bg-white dark:bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300 hover:-translate-y-0.5 ${meta.glow} flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs overflow-hidden shadow-sm dark:shadow-none`}
                               >
                                 <div className="space-y-1.5 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap">
@@ -891,10 +792,6 @@ export default function MSMEProfileModal({
 
                                 <div className="flex items-center justify-between md:justify-end gap-4 md:gap-5 shrink-0 border-t border-slate-100 dark:border-slate-800/60 md:border-0 pt-3 md:pt-0">
                                   <div className="flex items-center gap-3">
-                                    {/* <HistoryScoreRing
-                                      value={item.pd_score ?? (item.default_probability_pct ? item.default_probability_pct / 100 : 0)}
-                                      color={meta.ring}
-                                    /> */}
                                     <div className="text-right">
                                       <div
                                         className={`flex items-center justify-end gap-1 font-bold ${meta.text}`}
@@ -925,7 +822,6 @@ export default function MSMEProfileModal({
                                       Timestamp
                                     </span>
                                   </div>
-                                  
                                 </div>
                               </div>
                             </div>

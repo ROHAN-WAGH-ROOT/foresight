@@ -11,21 +11,18 @@ import {
   Search,
   ShieldAlert,
   TrendingUp,
-  User
+  User,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import {
-  // batchRiskPredictionApi,
   getCustomerLoansApi,
   getCustomerProfileApi,
   getCustomerRiskHistoryApi,
-  getEarlyCustomerWarningAlertsApi,
   getHighRiskCustomersApi,
   predictCustomerRiskApi,
   searchCustomerApi,
   type Customer,
   type CustomerProfile,
-  // type EarlyWarningAlert,
   type HighRiskCustomer,
   type Loan,
   type RiskHistoryItem,
@@ -42,10 +39,6 @@ function CustomerRisk() {
 
   // Alert queues
   const [highRiskList, setHighRiskList] = useState<HighRiskCustomer[]>([]);
-  // const [earlyWarnings, setEarlyWarnings] = useState<EarlyWarningAlert[]>([]);
-  // const [activeQueueTab, setActiveQueueTab] = useState<
-  //   "warnings" | "highrisk" | "results"
-  // >("warnings");
 
   // Profile data
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
@@ -54,10 +47,6 @@ function CustomerRisk() {
   const [activeDetailTab, setActiveDetailTab] = useState<
     "risk" | "loans" | "history"
   >("risk");
-
-  // Batch action state
-  // const [batchStatus, setBatchStatus] = useState<string | null>(null);
-  // const [isBatchRunning, setIsBatchRunning] = useState(false);
 
   // Loaders
   const [isSearching, setIsSearching] = useState(false);
@@ -68,10 +57,6 @@ function CustomerRisk() {
   // Initialize early warnings and high risk queue
   const loadQueues = async () => {
     try {
-      const warnings = await getEarlyCustomerWarningAlertsApi();
-        (warnings);
-      // setEarlyWarnings((prev) => [...prev, highRisk])
-
       const highRisk = await getHighRiskCustomersApi("HIGH");
       setHighRiskList(highRisk);
     } catch (error) {
@@ -82,9 +67,6 @@ function CustomerRisk() {
   useEffect(() => {
     loadQueues();
   }, []);
-  {
-    console.log(profile?.latest_risk);
-  }
 
   // Search handler
   const handleSearch = async (e: React.FormEvent) => {
@@ -164,36 +146,6 @@ function CustomerRisk() {
     return () => timers.forEach(clearTimeout);
   }, [activeDetailTab, history]);
 
-  // Run Batch evaluation
-  // const handleBatchEvaluate = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   const ids = batchInput
-  //     .split(",")
-  //     .map((id) => parseInt(id.trim()))
-  //     .filter((id) => !isNaN(id));
-
-  //   if (ids.length === 0) {
-  //     // setBatchStatus("Please enter valid, comma-separated customer IDs.");
-  //     return;
-  //   }
-
-  //   // setIsBatchRunning(true);
-  //   // setBatchStatus("Executing batch predictions...");
-  //   try {
-  //     // const res = await batchRiskPredictionApi(ids);
-  //     // setBatchStatus(
-  //     //   `Successfully processed ${res.processed} customers. Batch completed.`,
-  //     // );
-  //     setBatchInput("");
-  //     await loadQueues();
-  //   } catch (error: any) {
-  //     console.error("Batch run failed:", error);
-  //     // setBatchStatus("Batch prediction failed. Check inputs or connection.");
-  //   } finally {
-  //     // setIsBatchRunning(false);
-  //   }
-  // };
-
   // Parse JSON representations safely
   const parseJsonList = (jsonStr: any): string[] => {
     if (!jsonStr) return [];
@@ -205,16 +157,6 @@ function CustomerRisk() {
       return [jsonStr.toString()];
     }
   };
-
-  // const parseJsonObject = (jsonStr: any): Record<string, number> => {
-  //   if (!jsonStr) return {};
-  //   if (typeof jsonStr === "object") return jsonStr;
-  //   try {
-  //     return JSON.parse(jsonStr);
-  //   } catch {
-  //     return {};
-  //   }
-  // };
 
   const getRiskColor = (category: string) => {
     switch (category?.toUpperCase()) {
@@ -280,35 +222,10 @@ function CustomerRisk() {
     }
   };
 
-  // small conic-gradient dial for default probability
-  function HistoryScoreRing({
-    value,
-    color,
-  }: {
-    value: number;
-    color: string;
-  }) {
-    const pct = Math.round(value * 100);
-    return (
-      <div
-        className="relative w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-        style={{
-          background: `conic-gradient(${color} ${pct * 3.6}deg, rgba(148,163,184,0.15) 0deg)`,
-        }}
-      >
-        <div className="absolute inset-[3px] rounded-full bg-white dark:bg-slate-900 flex items-center justify-center">
-          <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200">
-            {pct}%
-          </span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-6 flex flex-col xl:flex-row gap-6 transition-colors duration-300">
       {/* Left panel - Search, Queue, Batch predictions */}
-      <div className="w-full xl:w-96 flex flex-col gap-6 flex-shrink-0">
+      <div className="w-full xl:w-80 flex flex-col gap-6 shrink-0">
         {/* Customer Search Panel */}
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
           <h2 className="text-sm font-bold tracking-wider text-slate-900 dark:text-white">
@@ -404,7 +321,7 @@ function CustomerRisk() {
       </div>
 
       {/* Right panel - Selected Customer profile & detailed risk assessment sheets */}
-      <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm flex flex-col overflow-hidden min-h-[600px]">
+      <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl shadow-sm flex flex-col overflow-hidden min-h-150">
         {isProfileLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-400">
             <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
@@ -460,11 +377,12 @@ function CustomerRisk() {
               </div>
 
               {/* Action refresh risk prediction */}
+
               <div className="flex gap-1.5">
                 <button
                   onClick={handleEvaluate}
                   disabled={isEvaluating}
-                  className="self-start md:self-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                  className="self-start md:self-center px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
                 >
                   {isEvaluating ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -478,16 +396,12 @@ function CustomerRisk() {
                   onClick={() => {
                     setOpenModal(true);
                   }}
-                  className="self-start md:self-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                  className="self-start md:self-center px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
                 >
                   AI Recommended Action Plan
                 </button>
               </div>
             </div>
-
-            {/* Assumes 'data' variable contains your object:
-  { customer_id: 2996, default_probability_pct: 73.98, feature_importance: "...", ... } 
-*/}
 
             <Modal
               isOpen={openModal}
@@ -495,14 +409,11 @@ function CustomerRisk() {
               title="AI Recommended Action"
             >
               {/* Modern Gradient Backdrop Accent inside the Modal */}
-              <div className="absolute top-0 right-0 -z-10 h-32 w-32 rounded-full bg-gradient-to-tr from-rose-400/20 to-amber-300/30 blur-2xl" />
-              <div className="absolute top-12 left-0 -z-10 h-24 w-24 rounded-full bg-gradient-to-br from-indigo-400/10 to-purple-400/20 blur-xl" />
+              <div className="absolute top-0 right-0 -z-10 h-32 w-32 rounded-full bg-linear-to-tr from-rose-400/20 to-amber-300/30 blur-2xl pointer-events-none" />
+              <div className="absolute top-12 left-0 -z-10 h-24 w-24 rounded-full bg-linear-to-br from-indigo-400/10 to-purple-400/20 blur-xl pointer-events-none" />
 
               {(() => {
                 // Safely parse incoming data arrays & weights
-                const features = JSON.parse(
-                  profile?.latest_risk?.feature_importance || "{}",
-                );
                 const actions = JSON.parse(
                   profile?.latest_risk?.recommended_action || "[]",
                 );
@@ -511,9 +422,9 @@ function CustomerRisk() {
                 );
 
                 return (
-                  <div className="space-y-5">
+                  <div className="space-y-4 sm:space-y-5">
                     {/* Highlighted AI Warning Banner with Gradient Border effect */}
-                    <div className="relative overflow-hidden rounded-xl bg-neutral-900 dark:bg-slate-950 p-4 text-white shadow-lg border border-neutral-800 dark:border-slate-800">
+                    <div className="relative overflow-hidden rounded-xl bg-neutral-900 dark:bg-slate-950 p-3.5 sm:p-4 text-white shadow-lg border border-neutral-800 dark:border-slate-800">
                       {/* Background radial gradient glow */}
                       <div className="absolute -right-4 -top-8 h-24 w-24 rounded-full bg-rose-500/30 blur-xl" />
 
@@ -533,23 +444,23 @@ function CustomerRisk() {
                             />
                           </svg>
                         </div>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[14px] font-mono text-white">
+                            <span className="text-xs sm:text-[14px] font-mono text-white truncate max-w-full">
                               Name: {profile?.customer?.full_name}
                             </span>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-800/50">
+                            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-800/50">
                               {profile?.latest_risk?.risk_category ||
                                 "CRITICAL"}{" "}
                               Status
                             </span>
                           </div>
-                          <h4 className="text-base font-bold text-neutral-100 mt-1">
+                          <h4 className="text-sm sm:text-base font-bold text-neutral-100 mt-1">
                             {profile?.latest_risk?.will_default_12m
                               ? "Imminent Default Risk Flagged"
                               : "Monitored Account Status"}
                           </h4>
-                          <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+                          <p className="text-[11px] sm:text-xs text-neutral-400 mt-1 leading-relaxed">
                             {reasons[0] ||
                               "AI models have noted high variance metrics across primary billing benchmarks."}
                           </p>
@@ -557,57 +468,29 @@ function CustomerRisk() {
                       </div>
                     </div>
 
-                    {/* Cards & Graphs Section */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Cards & Graphs Section - Upgraded grid structure for fluid laptop responsiveness */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Metric Card */}
                       <div className="rounded-xl border border-neutral-200 dark:border-slate-800 bg-neutral-50/50 dark:bg-slate-900/40 p-3 shadow-sm">
                         <span className="text-xs font-medium text-neutral-500 dark:text-slate-400 block">
                           Risk Score
                         </span>
-                        <div className="mt-1 flex items-baseline gap-1">
-                          <span className="text-2xl font-black tracking-tight text-neutral-900 dark:text-slate-50">
+                        <div className="mt-0.5 flex items-baseline gap-1">
+                          <span className="text-xl sm:text-2xl font-black tracking-tight text-neutral-900 dark:text-slate-50">
                             {profile?.latest_risk?.risk_score || "0"}%
                           </span>
                         </div>
                       </div>
-
-                      {/* Mini Risk-Trajectory Graph representing Feature Weights */}
-
-
-                      {/* <div className="rounded-xl border border-neutral-200 dark:border-slate-800 bg-neutral-50/50 dark:bg-slate-900/40 p-3 shadow-sm flex flex-col justify-between">
-                        <div>
-                          <span className="text-xs font-medium text-neutral-500 dark:text-slate-400 block">
-                            Top Trigger Profile
-                          </span>
-                          <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-0.5 block truncate capitalize">
-                            {Object.keys(features)[0]?.replace(/_/g, " ") ||
-                              "No metrics matched"}
-                          </span>
-                        </div>
-                        
-                        <div className="mt-2 flex items-end gap-1.5 h-6">
-                          {Object.values(features).map((val: any, index) => (
-                            <div
-                              key={index}
-                              className="w-full bg-indigo-500 dark:bg-indigo-600 rounded-t-xs transition-all duration-300"
-                              style={{
-                                height: `${Math.min((val / 2) * 100, 100)}%`,
-                              }}
-                              title={`Weight: ${val}`}
-                            />
-                          ))}
-                        </div>
-                      </div> */}
                     </div>
 
                     {/* Dynamic Underlying Reasons Box */}
                     {reasons.length > 1 && (
-                      <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-900/40 dark:bg-red-950/20">
-                        <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
+                      <div className="rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-900/40 dark:bg-red-950/20">
+                        <span className="mb-1.5 block text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">
                           Supporting Indicators
                         </span>
 
-                        <ul className="space-y-1.5 pl-5 text-[13px] text-red-700 dark:text-red-300 list-disc marker:text-red-500 dark:marker:text-red-400">
+                        <ul className="space-y-1 pl-4 text-xs sm:text-[13px] text-red-700 dark:text-red-300 list-disc marker:text-red-500 dark:marker:text-red-400 max-h-[15vh] sm:max-h-none overflow-y-auto">
                           {reasons
                             .slice(1, 4)
                             .map((reason: string, idx: number) => (
@@ -620,25 +503,26 @@ function CustomerRisk() {
                     )}
 
                     {/* Highlights & AI Action Steps */}
-                    <div className="space-y-2.5">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 dark:text-slate-500">
+                    <div className="space-y-2">
+                      <h4 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-400 dark:text-slate-500">
                         AI Pre-emptive Action Plan
                       </h4>
 
-                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {/* Adjusted height configurations to support both compact laptop panels and high-res PC monitors */}
+                      <div className="space-y-2 max-h-[22vh] sm:max-h-48 overflow-y-auto pr-1 text-left">
                         {actions.map((action: string, i: number) => {
                           const isUrgent = action.startsWith("URGENT");
                           return (
                             <div
                               key={i}
-                              className={`group flex items-start gap-3 rounded-lg border p-2.5 shadow-sm transition-colors ${
+                              className={`group flex items-start gap-2.5 rounded-lg border p-2 sm:p-2.5 shadow-sm transition-colors ${
                                 isUrgent
                                   ? "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900/50 text-red-950 dark:text-red-200"
                                   : "bg-white dark:bg-slate-900 border-neutral-100 dark:border-slate-800 text-neutral-800 dark:text-slate-300 hover:border-indigo-200 dark:hover:border-indigo-900"
                               }`}
                             >
                               <span
-                                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
+                                className={`flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-md text-[10px] sm:text-xs font-bold ${
                                   isUrgent
                                     ? "bg-red-600 text-white"
                                     : "bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400"
@@ -646,8 +530,8 @@ function CustomerRisk() {
                               >
                                 {i + 1}
                               </span>
-                              <div>
-                                <h5 className="text-xs font-bold leading-tight">
+                              <div className="min-w-0 flex-1">
+                                <h5 className="text-[11px] sm:text-xs font-bold leading-snug wrap-break-word">
                                   {action}
                                 </h5>
                               </div>
@@ -658,14 +542,14 @@ function CustomerRisk() {
                     </div>
 
                     {/* Modal Footer actions */}
-                    <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-slate-800 shrink-0">
                       <span className="text-[10px] font-mono text-neutral-400 dark:text-slate-500">
                         {/* Sync timestamp section */}
                       </span>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setOpenModal(false)}
-                          className="rounded-lg border border-neutral-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                          className="rounded-lg border border-neutral-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-700 dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                         >
                           Close
                         </button>
@@ -676,75 +560,72 @@ function CustomerRisk() {
               })()}
             </Modal>
             {/* Profile Overview Indicators Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 border-b border-slate-100 dark:border-slate-800 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 border-b border-slate-100 dark:border-slate-800 text-left w-full">
               {/* Credit Score */}
-              <div className="p-4.5 border-r border-slate-100 dark:border-slate-800 space-y-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              <div className="p-4 sm:p-4.5 border-b sm:border-b-0 border-r border-slate-100 dark:border-slate-800 space-y-1 min-w-0">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 block truncate">
                   Credit Score
                 </span>
-                <div className="text-[18px] font-extrabold">
+                <div className="text-base sm:text-[15px] font-extrabold text-slate-900 dark:text-white truncate">
                   {profile.customer.credit_score}
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
                   Underwriting scoring range
                 </span>
               </div>
 
               {/* Monthly Income */}
-              <div className="p-4.5 border-r border-slate-100 dark:border-slate-800 space-y-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              <div className="p-2 sm:p-4.5 border-b sm:border-b-0 md:border-r border-slate-100 dark:border-slate-800 space-y-1 min-w-0">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 block truncate">
                   Monthly Income
                 </span>
-                <div className="text-[18px] font-extrabold">
+                <div className="text-base sm:text-[15px] font-extrabold text-slate-900 dark:text-white truncate">
                   ₹{profile.customer.monthly_income?.toLocaleString() || 0}
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                  Declared salary/revenue
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
+                  Declared salary
                 </span>
               </div>
 
               {/* Total Loans */}
-              <div className="p-4.5 border-r border-slate-100 dark:border-slate-800 space-y-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              <div className="p-4 sm:p-4.5 border-b md:border-b-0 border-r border-slate-100 dark:border-slate-800 space-y-1 min-w-0">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 block truncate">
                   Total Loans
                 </span>
-                <div className="text-[18px] font-extrabold text-indigo-600 dark:text-indigo-400">
+                <div className="text-base sm:text-[15px] font-extrabold text-indigo-600 dark:text-indigo-400 truncate">
                   {profile.active_loans_count}
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
                   Total loans taken
                 </span>
               </div>
 
               {/* Total Outstanding */}
-              <div className="p-4 border-r border-slate-100 dark:border-slate-800 space-y-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              <div className="p-4 sm:p-4.5 border-b sm:border-b-0 border-r border-slate-100 dark:border-slate-800 space-y-1 min-w-0">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 block truncate">
                   Total Outstanding
                 </span>
-                <div className="text-[18px] font-extrabold text-rose-500">
+                <div className="text-base sm:text-[15px] font-extrabold text-rose-500 truncate">
                   ₹{profile.total_outstanding.toLocaleString()}
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
                   Total remaining liabilities
                 </span>
               </div>
 
-              {/* Fifth Card */}
-              <div className="p-4 space-y-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {/* Probability Default */}
+              <div className="p-4 sm:p-4.5 space-y-1 min-w-0 col-span-1 sm:col-span-2 md:col-span-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 block truncate">
                   Probability Default
                 </span>
-
-                <div className="text-[18px] font-extrabold text-rose-500 dark:text-rose-50000">
+                <div className="text-base sm:text-[15px] font-extrabold text-rose-500 truncate">
                   {(profile.latest_risk.pd_score * 100).toFixed(2)}%
                 </div>
-
-                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
                   PD engine index score
                 </span>
               </div>
             </div>
-
             {/* Detailed Tabs Header */}
             <div className="flex border-b border-slate-100 dark:border-slate-800 text-xs font-bold">
               <button
@@ -791,50 +672,6 @@ function CustomerRisk() {
                   </div>
                 ) : (
                   <div className="space-y-8 animate-fade-in">
-                    {/* Risk parameters */}
-                    {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="p-4 rounded-2xl  border border-slate-200/60 dark:bg-indigo-500 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/10 space-y-1">
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-white uppercase tracking-wider">
-                          Probability of Default (PD)
-                        </span>
-                        <div className="text-2xl font-black text-slate-900 dark:text-white">
-                          {(profile.latest_risk.pd_score * 100).toFixed(2)}%
-                        </div>
-                        <div className="text-[10px] text-slate-400 dark:text-white font-medium">
-                          PD engine index score
-                        </div>
-                      </div>
-
-                      <div className="p-4 rounded-2xl border dark:bg-indigo-500 border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/10 space-y-1">
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-white uppercase tracking-wider">
-                          Risk Classification
-                        </span>
-                        <div>
-                          <span
-                            className={`inline-flex px-2.5 py-0.5 text-xs font-extrabold rounded-md border uppercase tracking-wider ${getRiskColor(profile.latest_risk.risk_category)}`}
-                          >
-                            {profile.latest_risk.risk_category}
-                          </span>
-                        </div>
-                        <div className="text-[10px]  text-slate-400 dark:text-white font-medium mt-1">
-                          Classified credit category
-                        </div>
-                      </div>
-
-                      <div className="p-4 rounded-2xl dark:bg-indigo-500 border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/10 space-y-1">
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-white uppercase tracking-wider">
-                          Model evaluation score
-                        </span>
-                        <div className="text-2xl font-black text-slate-900 dark:text-white">
-                          {profile.latest_risk.risk_score}
-                        </div>
-                        <div className="text-[10px] text-slate-400 dark:text-white font-medium">
-                          Credit engine model version:{" "}
-                          {profile.latest_risk.model_version}
-                        </div>
-                      </div>
-                    </div> */}
-
                     {/* Breakdown reasons and recommendations */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       {/* Risk Reasons */}
@@ -850,7 +687,7 @@ function CustomerRisk() {
                                 key={idx}
                                 className="flex items-start gap-2.5 text-rose-800 dark:text-rose-350 font-medium"
                               >
-                                <span className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                <span className="mt-1 shrink-0 w-1.5 h-1.5 rounded-full bg-rose-500" />
                                 <span>{reason}</span>
                               </div>
                             ),
@@ -872,56 +709,13 @@ function CustomerRisk() {
                               key={idx}
                               className="flex items-start gap-2.5 text-emerald-800 dark:text-emerald-350 font-medium"
                             >
-                              <span className="mt-1 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <span className="mt-1 shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500" />
                               <span>{action}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     </div>
-
-                    {/* Feature Importance Indicators */}
-                    {/* <div className="space-y-3">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Model Feature Attribution weights
-                      </h3>
-                      <div className="p-5 border border-slate-200/70 dark:border-slate-800 rounded-2xl space-y-4">
-                        {Object.entries(
-                          parseJsonObject(
-                            profile.latest_risk.feature_importance,
-                          ),
-                        ).length === 0 ? (
-                          <div className="text-slate-400 text-xs">
-                            No model feature attribution metadata recorded.
-                          </div>
-                        ) : (
-                          Object.entries(
-                            parseJsonObject(
-                              profile.latest_risk.feature_importance,
-                            ),
-                          )
-                            .sort((a, b) => b[1] - a[1])
-                            .map(([key, weight]) => (
-                              <div key={key} className="space-y-1.5 text-xs">
-                                <div className="flex justify-between font-semibold">
-                                  <span className="text-slate-600 dark:text-slate-400 capitalize">
-                                    {key.replace(/_/g, " ")}
-                                  </span>
-                                  <span className="text-slate-900 dark:text-slate-200">
-                                    {(weight).toFixed(1)}% weight
-                                  </span>
-                                </div>
-                                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                                  <div
-                                    className="bg-indigo-600 dark:bg-indigo-500 h-full rounded-full"
-                                    style={{ width: `${weight * 60}%` }}
-                                  />
-                                </div>
-                              </div>
-                            ))
-                        )}
-                      </div>
-                    </div> */}
 
                     <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 text-right">
                       Report audited at:{" "}
@@ -1006,8 +800,6 @@ function CustomerRisk() {
                     </table>
                   </div>
                 ))}
-
-              {/* Tab 3: Risk Evaluation History */}
               {/* Tab 3: Risk Evaluation History */}
               {activeDetailTab === "history" &&
                 (history.length === 0 ? (
@@ -1018,7 +810,7 @@ function CustomerRisk() {
                 ) : (
                   <div className="relative pl-1">
                     {/* connective timeline spine */}
-                    <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gradient-to-b from-slate-300 dark:from-slate-700 via-slate-200/60 dark:via-slate-800/60 to-transparent" />
+                    <div className="absolute left-3.75 top-2 bottom-2 w-px bg-linear-to-b from-slate-300 dark:from-slate-700 via-slate-200/60 dark:via-slate-800/60 to-transparent" />
 
                     <div className="space-y-3">
                       {history.map((item, index) => {
@@ -1038,11 +830,11 @@ function CustomerRisk() {
                           >
                             {/* timeline node */}
                             <div
-                              className={`absolute left-[7px] top-6 w-2.5 h-2.5 rounded-full ${meta.dot} ring-4 ring-white dark:ring-slate-900`}
+                              className={`absolute left-1.75 top-6 w-2.5 h-2.5 rounded-full ${meta.dot} ring-4 ring-white dark:ring-slate-900`}
                             />
 
                             <div
-                              className={`group relative rounded-2xl border ${meta.border} bg-gradient-to-br ${meta.grad} bg-white dark:bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300 hover:-translate-y-0.5 ${meta.glow} flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs overflow-hidden`}
+                              className={`group relative rounded-2xl border ${meta.border} bg-linear-to-br ${meta.grad} bg-white dark:bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300 hover:-translate-y-0.5 ${meta.glow} flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs overflow-hidden`}
                             >
                               <div className="space-y-1.5 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -1069,10 +861,6 @@ function CustomerRisk() {
                               </div>
 
                               <div className="flex items-center gap-4 md:gap-5 shrink-0">
-                                {/* <HistoryScoreRing
-                                  value={item.pd_score}
-                                  color={meta.ring}
-                                /> */}
                                 <div className="text-right hidden sm:block">
                                   <div
                                     className={`flex items-center justify-end gap-1 font-bold ${meta.text}`}
@@ -1092,7 +880,6 @@ function CustomerRisk() {
                                     ).toLocaleString()}
                                   </div>
                                 </div>
-                                {/* <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-700 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all duration-300 hidden md:block" /> */}
                               </div>
                             </div>
                           </div>

@@ -43,7 +43,7 @@ export default function AccountDistribution({
   // Tracks the active data array currently rendered by the chart
   const [chartData, setChartData] =
     useState<DistributionDataItem[]>(distributions);
- 
+
   // Keeps track of the selected risk category (null means main view)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -51,13 +51,11 @@ export default function AccountDistribution({
 
   // Sync internal chart data if the initial parent distributions prop changes
   useEffect(() => {
-    
     if (!selectedCategory) {
       setChartData(distributions);
     }
   }, [distributions, selectedCategory]);
 
-  
   // Click handler for the Pie Chart slices
   const handleSliceClick = async (data: any) => {
     // Prevent drilling down further if we are already in a sub-view
@@ -70,7 +68,6 @@ export default function AccountDistribution({
 
     try {
       const response = await getLoanRiskDistributionTypeApi(riskCategory);
-      
 
       // Map the API response fields (loan_type -> category, loan_count -> count)
       const mappedResult: DistributionDataItem[] = response.map(
@@ -100,7 +97,7 @@ export default function AccountDistribution({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900/60 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col justify-between min-h-[420px] relative">
+    <div className="bg-white dark:bg-slate-900/60 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col justify-between min-h-105 relative">
       {/* Header Area */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
@@ -134,7 +131,7 @@ export default function AccountDistribution({
       </div>
 
       {/* Main Chart Presentation Layer */}
-      <div className="h-[370px] w-full pt-4 flex items-center justify-center relative">
+      <div className="h-92.5 w-full pt-4 flex items-center justify-center relative">
         {isLoading ? (
           <div className="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
@@ -191,7 +188,6 @@ export default function AccountDistribution({
                     }
                     stroke="transparent"
                   />
-                  
                 ))}
               </Pie>
 

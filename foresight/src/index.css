@@ -21,8 +21,9 @@
   --heading: system-ui, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  /* Changed from 18px to 16px default to scale cleanly into 1326x768 screens */
+  font: 16px/145% var(--sans);
+  letter-spacing: 0.15px;
   color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
@@ -31,68 +32,40 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Smooth scaling boost for ultra-wide desktops while keeping laptops safe */
+  @media (min-width: 1390px) {
+    font-size: 15px;
   }
 
   --background: oklch(1 0 0);
-
   --foreground: oklch(0.145 0 0);
-
   --card: oklch(1 0 0);
-
   --card-foreground: oklch(0.145 0 0);
-
   --popover: oklch(1 0 0);
-
   --popover-foreground: oklch(0.145 0 0);
-
   --primary: oklch(0.205 0 0);
-
   --primary-foreground: oklch(0.985 0 0);
-
   --secondary: oklch(0.97 0 0);
-
   --secondary-foreground: oklch(0.205 0 0);
-
   --muted: oklch(0.97 0 0);
-
   --muted-foreground: oklch(0.556 0 0);
-
   --accent-foreground: oklch(0.205 0 0);
-
   --destructive: oklch(0.577 0.245 27.325);
-
   --input: oklch(0.922 0 0);
-
   --ring: oklch(0.708 0 0);
-
   --chart-1: oklch(0.87 0 0);
-
   --chart-2: oklch(0.556 0 0);
-
   --chart-3: oklch(0.439 0 0);
-
   --chart-4: oklch(0.371 0 0);
-
   --chart-5: oklch(0.269 0 0);
-
   --radius: 0.625rem;
-
   --sidebar: oklch(0.985 0 0);
-
   --sidebar-foreground: oklch(0.145 0 0);
-
   --sidebar-primary: oklch(0.205 0 0);
-
   --sidebar-primary-foreground: oklch(0.985 0 0);
-
   --sidebar-accent: oklch(0.97 0 0);
-
   --sidebar-accent-foreground: oklch(0.205 0 0);
-
   --sidebar-border: oklch(0.922 0 0);
-
   --sidebar-ring: oklch(0.708 0 0);
 }
 
@@ -117,11 +90,11 @@
 }
 
 #root {
-  /* width: 1126px; */
   max-width: 100%;
   margin: 0 auto;
-  text-align: center;
-  /* border-inline: 1px solid var(--border); */
+  /* Removed global center alignment so your data tables and grids display left-aligned by default */
+  text-align: left; 
+  min-height: 100vh;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -139,23 +112,27 @@ h2 {
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  font-size: 36px;
+  letter-spacing: -1.2px;
+  margin: 24px 0;
+  
+  @media (min-width: 1025px) {
+    font-size: 48px;
+    margin: 32px 0;
   }
 }
+
 h2 {
-  font-size: 24px;
+  font-size: 20px;
   line-height: 118%;
-  letter-spacing: -0.24px;
+  letter-spacing: -0.2px;
   margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+  
+  @media (min-width: 1025px) {
+    font-size: 24px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -169,7 +146,7 @@ code,
 }
 
 code {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
